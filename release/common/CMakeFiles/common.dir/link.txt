@@ -1,2 +1,0 @@
-/usr/bin/ar qc libcommon.a CMakeFiles/common.dir/progargs.cpp.o CMakeFiles/common.dir/bitmap_header.cpp.o CMakeFiles/common.dir/pixel.cpp.o CMakeFiles/common.dir/histogram.cpp.o CMakeFiles/common.dir/file_error.cpp.o CMakeFiles/common.dir/normalized_pixel.cpp.o
-/usr/bin/ranlib libcommon.a

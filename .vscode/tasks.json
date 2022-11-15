@@ -20,7 +20,10 @@
         {
             "label": "test",
             "type": "shell",
-            "command": "./test.sh"
+            "command": "./test.sh",
+            "presentation": {
+                "reveal": "silent"
+              }
         }
     ]
 }
