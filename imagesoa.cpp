@@ -12,4 +12,3 @@ int main(int argc, char **argv) {
   const auto config = parse_arguments(args);
   process<bitmap_soa>(config);
 }
-
