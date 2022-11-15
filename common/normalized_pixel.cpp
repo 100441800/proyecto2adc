@@ -19,12 +19,7 @@ namespace images::common {
 
   void normalized_pixel::intensity_transform() noexcept {
     for (auto & c: color) {
-      if (c <= intensity_threshold) {
-        c /= intensity_divisor1;
-      }
-      else {
-        c = std::pow((c + intensity_delta) / intensity_divisor2, intensity_exponent);
-      }
+      c = (c <= intensity_threshold) ? c / intensity_divisor1 : std::pow((c + intensity_delta) / intensity_divisor2, intensity_exponent) ;
     }
   }
 
@@ -33,10 +28,7 @@ namespace images::common {
   }
 
   double gamma_correction(double g) noexcept {
-    if (g <= gamma_threshold) {
-      return intensity_divisor1 * g;
-    }
-    return intensity_divisor2 * std::pow(g, intensity_expornent_inv) - intensity_delta;
+    return (g <= gamma_threshold) ? intensity_divisor1 * g : intensity_divisor2 * std::pow(g, intensity_expornent_inv) - intensity_delta;
   }
 
   uint8_t gray_denormalize(double g) noexcept {
