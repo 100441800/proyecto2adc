@@ -1,0 +1,5 @@
+if(EXISTS "/Users/josedavidricodias/Desktop/image/release/utest/utest[1]_tests.cmake")
+  include("/Users/josedavidricodias/Desktop/image/release/utest/utest[1]_tests.cmake")
+else()
+  add_test(utest_NOT_BUILT utest_NOT_BUILT)
+endif()
