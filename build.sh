@@ -13,6 +13,10 @@ elif [ $# -eq 1 ] && [ $1 == macos ]; then
 	find . -name ".DS_Store" -delete
 	cmake -S . -B release -DCMAKE_CXX_COMPILER=/opt/homebrew/bin/g++-12 -DCMAKE_BUILD_TYPE=Release
 	cmake --build release --clean-first
+elif [ $# -eq 1 ] && [ $1 == ubuntu ]; then
+# Config build directories for MacOS
+	cmake -S . -B release -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DCMAKE_BUILD_TYPE=Release
+	cmake --build release --clean-first
 else
 	echo "Incorrect arguments: use macos, windows or avignon"
 	exit -1
