@@ -1,6 +1,7 @@
 #include "bitmap_aos.hpp"
 #include "common/file_error.hpp"
 #include <fstream>
+//#include <vector>
 
 namespace images::aos {
 
@@ -66,18 +67,21 @@ namespace images::aos {
 
   bool bitmap_aos::is_gray() const noexcept {
     const auto max = std::ssize(pixels);
-    for (int i = 0; i < max; ++i) {
-      if (!pixels[i].is_gray()) { return false; }
+    bool cond = true;
+    for (int i = 0; i < max && cond; ++i) {
+      cond = (!pixels[i].is_gray()) ? false : true ;
     }
-    return true;
+    return cond;
   }
 
   namespace {
     constexpr std::array<int, 25> gauss_kernel{1, 4, 7, 4, 1, 4, 16, 26, 16, 4, 7, 26, 41, 26, 7, 4,
                                                16, 26, 16, 4, 1, 4, 7, 4, 1};
-
+    //constexpr std::array<int, 5> gauss_one_dimension_kernel = {1, 4, 7, 4, 1};
     constexpr int gauss_norm = 273;
+    //constexpr int gauss_one_dimension_norm = 17;
     constexpr auto gauss_size = std::ssize(gauss_kernel);
+    //constexpr auto gauss_one_dimension_size = std::ssize(gauss_one_dimension_kernel);
   }
 
   void bitmap_aos::gauss() noexcept {
@@ -102,7 +106,61 @@ namespace images::aos {
       result.pixels[pixel_index] = accum / gauss_norm;
     }
     *this = result;
+    
   }
+  /* One dimension version with time 6*O(n)
+    bitmap_aos result{*this};
+    const auto num_pixels = std::ssize(pixels);
+
+    std::vector<color_accumulator> image_accum_row;
+    image_accum_row.reserve(num_pixels);
+    this->gauss_rows(image_accum_row);
+  
+    std::vector<color_accumulator> image_accum_column;
+    image_accum_column.reserve(num_pixels);
+    this->gauss_columns(image_accum_row, image_accum_column);
+    
+    for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
+      result.pixels[pixel_index] = image_accum_column[pixel_index] / gauss_norm;
+    }
+    *this = result;
+  }
+  */
+
+  /*
+  void bitmap_aos::gauss_rows(std::vector<color_accumulator> & image_accum) noexcept {
+    const auto num_pixels = std::ssize(pixels);
+    const auto [pixels_width, pixels_height] = get_size();
+    color_accumulator no_color(0, 0, 0);
+    for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
+      color_accumulator accum;
+      const auto [row, column] = get_pixel_position(pixel_index);
+      accum += ((column) - 2 >= 0) ? pixels[index(row, column - 2)] * gauss_one_dimension_kernel[0] : no_color;
+      accum += ((column) - 1 >= 0) ? pixels[index(row, column - 1)] * gauss_one_dimension_kernel[1] : no_color;
+      accum += pixels[index(row, column)] * gauss_one_dimension_kernel[2];
+      accum +=  ((column) + 1 < pixels_width) ? pixels[index(row, column + 1)] * gauss_one_dimension_kernel[3] : no_color;
+      accum += ((column) + 2 < pixels_width) ? pixels[index(row, column + 2)] * gauss_one_dimension_kernel[4] : no_color;
+      image_accum[pixel_index] = accum;
+    }
+  }
+
+  void bitmap_aos::gauss_columns(std::vector<color_accumulator> & image_accum_row,
+                                 std::vector<color_accumulator> & image_accum_column) noexcept {
+    const auto num_pixels = std::ssize(pixels);
+    const auto [pixels_width, pixels_height] = get_size();
+    color_accumulator no_color(0, 0, 0);
+    for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
+      color_accumulator accum;
+      const auto [row, column] = get_pixel_position(pixel_index);
+      accum += ((row) - 2 >= 0) ? image_accum_row[index(row - 2, column)] * gauss_one_dimension_kernel[0] : no_color;
+      accum += ((row) - 1 >= 0) ? image_accum_row[index(row - 1, column)] * gauss_one_dimension_kernel[1] : no_color;
+      accum += image_accum_row[index(row, column)] * gauss_one_dimension_kernel[2];
+      accum += ((row) + 1 < pixels_height) ? image_accum_row[index(row + 1, column)] * gauss_one_dimension_kernel[3] : no_color;
+      accum += ((row) + 2 < pixels_height) ? image_accum_row[index(row + 2, column)] * gauss_one_dimension_kernel[4] : no_color;
+      image_accum_column[pixel_index] = accum;
+    }
+  }
+  */
 
   histogram bitmap_aos::generate_histogram() const noexcept {
     histogram histo;

@@ -20,7 +20,7 @@
         {
             "label": "test",
             "type": "shell",
-            "command": "./test.sh",
+            "command": "./build.sh macos; ./test.sh",
             "presentation": {
                 "reveal": "silent"
               }

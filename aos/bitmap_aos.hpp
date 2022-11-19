@@ -6,6 +6,7 @@
 #include "common/bitmap_header.hpp"
 #include "common/pixel.hpp"
 #include "common/histogram.hpp"
+//#include <vector>
 
 namespace images::aos {
 
@@ -23,6 +24,8 @@ namespace images::aos {
 
     void to_gray() noexcept;
     void gauss() noexcept;
+    //void gauss_rows(std::vector<color_accumulator> & image_accum) noexcept;
+    //void gauss_columns(std::vector<color_accumulator> & image_accum_row, std::vector<color_accumulator> & image_accum_column) noexcept;
     [[nodiscard]] histogram generate_histogram() const noexcept;
     void print_info(std::ostream & os) const noexcept;
 

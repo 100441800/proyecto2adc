@@ -112,3 +112,40 @@ TYPED_TEST(bitmap_test, gauss) {
   EXPECT_EQ(pixel(3, 3, 3), bm.get_pixel(0, 2));
   EXPECT_EQ(pixel(39, 0, 0), bm.get_pixel(5, 5));
 }
+
+TYPED_TEST(bitmap_test, gauss_one_pixel) {
+  TypeParam bm{1, 1};
+  bm.set_pixel(0, 0, {10, 10, 10});
+  bm.gauss();
+  using images::common::pixel;
+  EXPECT_EQ(pixel(1, 1, 1), bm.get_pixel(0, 0));
+}
+
+TYPED_TEST(bitmap_test, gauss_four_pixel) {
+  TypeParam bm{1, 1};
+  bm.set_pixel(0, 0, {10, 10, 10});
+  bm.set_pixel(0, 1, {10, 10, 10});
+  bm.set_pixel(1, 0, {10, 10, 10});
+  bm.set_pixel(1, 1, {10, 10, 10});
+  bm.gauss();
+  using images::common::pixel;
+  EXPECT_EQ(pixel(1, 1, 1), bm.get_pixel(0, 0));
+  EXPECT_EQ(pixel(10, 10, 10), bm.get_pixel(0, 1));
+  EXPECT_EQ(pixel(10, 10, 10), bm.get_pixel(1, 0));
+  EXPECT_EQ(pixel(10, 10, 10), bm.get_pixel(1, 1));
+}
+
+TYPED_TEST(bitmap_test, gauss_100_pixel) {
+  TypeParam bm{100, 100};
+  for(int i=0; i<100; ++i) {
+    for(int j=0; j<100; ++j) {
+      bm.set_pixel(i, j, {100, 100, 100});
+    }
+  }
+  bm.gauss();
+  using images::common::pixel;
+  EXPECT_EQ(pixel(48, 48, 48), bm.get_pixel(0, 0));
+  EXPECT_EQ(pixel(65, 65, 65), bm.get_pixel(0, 1));
+  EXPECT_EQ(pixel(65, 65, 65), bm.get_pixel(1, 0));
+  EXPECT_EQ(pixel(87, 87, 87), bm.get_pixel(1, 1));
+}

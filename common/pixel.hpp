@@ -40,6 +40,16 @@ namespace images::common {
       return result;
     }
 
+    /*
+    color_accumulator operator*(int factor) {
+      color_accumulator result(*this);
+      for (auto & c: result.color) {
+        c *= factor;
+      }
+      return result;
+    }
+    */
+
     [[nodiscard]] long red() const noexcept { return color[red_channel]; }
 
     [[nodiscard]] long green() const noexcept { return color[green_channel]; }

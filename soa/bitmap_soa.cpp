@@ -75,11 +75,12 @@ namespace images::soa {
 
   bool bitmap_soa::is_gray() const noexcept {
     const auto max = std::ssize(pixels);
-    for (int i = 0; i < max; ++i) {
+    bool cond = true;
+    for (int i = 0; i < max && cond; ++i) {
       const auto p = get_pixel(i);
-      if (!p.is_gray()) { return false; }
+      cond = (!p.is_gray()) ? false : true ;
     }
-    return true;
+    return cond;
   }
 
   namespace {
