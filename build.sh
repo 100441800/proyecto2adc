@@ -1,6 +1,6 @@
 #!/bin/bash
-#SBATCH -o ./out-build.out
-#SBATCH -e ./out-build.out
+#SBATCH -o ./out-build.txt
+#SBATCH -e ./out-build.txt
 
 if [ $# -eq 1 ] && [ $1 == avignon ]; then
 # Config build directories for Avignon

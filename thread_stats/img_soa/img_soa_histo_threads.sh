@@ -1,3 +1,5 @@
+#!/bin/bash
+export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64
 echo "\n########## Program: img-soa in out histo ##########"
 export OMP_SCHEDULE="static"
 echo "\n##### Schedule: ${OMP_SCHEDULE} #####"
