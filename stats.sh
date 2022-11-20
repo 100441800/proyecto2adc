@@ -2,7 +2,7 @@
 #SBATCH -o ./out-stats.txt
 #SBATCH -e ./out-stats.txt
 
-export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64 
+export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64
 echo "AOS MONO" 
 perf stat -a -d release/img-aos in out mono
 perf stat -e power/energy-cores/,power/energy-pkg/,power/energy-ram/ release/img-aos in out mono  

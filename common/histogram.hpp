@@ -6,6 +6,7 @@
 #include <vector>
 #include <cstdint>
 #include <filesystem>
+#include <omp.h>
 
 namespace images::common {
 
@@ -14,11 +15,11 @@ namespace images::common {
     histogram() noexcept = default;
 
     void add_color(pixel p) noexcept;
-
+    #pragma omp declare simd
     void add_red(uint8_t r) noexcept { channels[red_channel][r]++; }
-
+    #pragma omp declare simd
     void add_green(uint8_t g) noexcept { channels[green_channel][g]++; }
-
+    #pragma omp declare simd
     void add_blue(uint8_t b) noexcept { channels[blue_channel][b]++; }
 
     [[nodiscard]] int get_red_frequency(uint8_t v) const noexcept {

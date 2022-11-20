@@ -1,7 +1,7 @@
 #include "bitmap_aos.hpp"
 #include "common/file_error.hpp"
 #include <fstream>
-//#include <vector>
+#include <omp.h>
 
 namespace images::aos {
 
@@ -60,6 +60,7 @@ namespace images::aos {
 
   void bitmap_aos::to_gray() noexcept {
     const auto max = std::ssize(pixels);
+    #pragma omp parallel for simd
     for (int i = 0; i < max; ++i) {
       pixels[i] = pixels[i].to_gray_corrected();
     }
@@ -88,6 +89,7 @@ namespace images::aos {
     bitmap_aos result{*this};
     const auto num_pixels = std::ssize(pixels);
     const auto [pixels_width, pixels_height] = get_size();
+    #pragma omp parallel for simd proc_bind(spread)
     for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
       const auto [row, column] = get_pixel_position(pixel_index);
       color_accumulator accum;
@@ -165,8 +167,11 @@ namespace images::aos {
   histogram bitmap_aos::generate_histogram() const noexcept {
     histogram histo;
     const int pixel_count = width() * height();
+    #pragma omp simd
     for (int i = 0; i < pixel_count; ++i) {
-      histo.add_color(pixels[i]);
+      histo.add_red(pixels[i].red());
+      histo.add_green(pixels[i].green());
+      histo.add_blue(pixels[i].blue());
     }
     return histo;
   }
