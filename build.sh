@@ -18,6 +18,6 @@ elif [ $# -eq 1 ] && [ $1 == ubuntu ]; then
 	cmake -S . -B release -DCMAKE_CXX_COMPILER=/usr/bin/g++-12 -DCMAKE_BUILD_TYPE=Release
 	cmake --build release --clean-first
 else
-	echo "Incorrect arguments: use macos, windows or avignon"
+	echo "Incorrect arguments: use macos or avignon"
 	exit -1
 fi
