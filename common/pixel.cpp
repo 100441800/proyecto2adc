@@ -9,7 +9,6 @@ namespace images::common {
     return {gray_level, gray_level, gray_level};
   }
 
-  #pragma omp declare simd
   uint8_t to_gray_corrected(uint8_t r, uint8_t g, uint8_t b) noexcept {
     auto real_pixel = normalized_pixel(r, g, b);
     real_pixel.intensity_transform();

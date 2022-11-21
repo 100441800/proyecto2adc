@@ -1,6 +1,11 @@
 #include "bitmap_aos.hpp"
 #include "common/file_error.hpp"
 #include <fstream>
+#include <tuple>
+
+#include <array>
+#include <vector>
+
 #include <omp.h>
 
 namespace images::aos {
@@ -60,10 +65,22 @@ namespace images::aos {
 
   void bitmap_aos::to_gray() noexcept {
     const auto max = std::ssize(pixels);
-    #pragma omp parallel for simd
-    for (int i = 0; i < max; ++i) {
-      pixels[i] = pixels[i].to_gray_corrected();
+    std::vector<pixel> pixels_mono;
+    pixels_mono.reserve(max);
+    #pragma omp parallel 
+    {
+      std::vector<pixel> pixels_mono_private;
+      #pragma omp for nowait
+      for (int i = 0; i < max; ++i) {
+        pixels_mono_private.push_back(pixels[i].to_gray_corrected());
+      }
+      #pragma omp for ordered
+      for(int i=0; i<omp_get_num_threads(); i++) {
+        #pragma omp ordered
+        pixels_mono.insert(pixels_mono.end(), pixels_mono_private.begin(), pixels_mono_private.end());
+      }
     }
+    pixels = pixels_mono;
   }
 
   bool bitmap_aos::is_gray() const noexcept {
@@ -89,26 +106,33 @@ namespace images::aos {
     bitmap_aos result{*this};
     const auto num_pixels = std::ssize(pixels);
     const auto [pixels_width, pixels_height] = get_size();
-    #pragma omp parallel for simd proc_bind(spread)
+    color_accumulator accum;
+    color_accumulator null_accum({0,0,0});
+    int row = 0;
+    int column = 0;
+    #pragma omp parallel for firstprivate(null_accum, accum, row, column, gauss_kernel) proc_bind(spread)
     for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
-      const auto [row, column] = get_pixel_position(pixel_index);
-      color_accumulator accum;
       for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
+        // Reset accum, row and column at the start of the loop
+        (gauss_index == 0) ? (accum = null_accum, 
+                              row = pixel_index / pixels_width,
+                              column = pixel_index % pixels_width): (row); 
+
         const int column_offset = (gauss_index % 5) - 2;
         const int j = column + column_offset;
-        if (j < 0 || j >= pixels_width) { continue; }
+        bool stay_in_loop = true;
+        stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
         const int row_offset = (gauss_index / 5) - 2;
         const int i = row + row_offset;
-        if (i < 0 || i >= pixels_height) { continue; }
+        stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         const int gauss_value = gauss_kernel[gauss_index];
-        const auto gauss_pixel_index = index(i, j);
-        accum += pixels[gauss_pixel_index] * gauss_value;
+        const auto gauss_pixel_index = i * pixels_width + j;
+        accum += (stay_in_loop) ? pixels[gauss_pixel_index] * gauss_value : null_accum;
+        result.pixels[pixel_index] = (gauss_index+1==gauss_size) ? accum / gauss_norm : null_accum;
       }
-      result.pixels[pixel_index] = accum / gauss_norm;
     }
     *this = result;
-    
   }
   /* One dimension version with time 6*O(n)
     bitmap_aos result{*this};
@@ -165,14 +189,20 @@ namespace images::aos {
   */
 
   histogram bitmap_aos::generate_histogram() const noexcept {
-    histogram histo;
     const int pixel_count = width() * height();
-    #pragma omp parallel for simd
+    int red[256] = {0};
+    int green[256] = {0};
+    int blue[256] = {0};
+    #pragma omp parallel for reduction(+:red[:256], green[:256], blue[:256])
     for (int i = 0; i < pixel_count; ++i) {
-      histo.add_red(pixels[i].red());
-      histo.add_green(pixels[i].green());
-      histo.add_blue(pixels[i].blue());
+      red[pixels[i].red()]++;
+      green[pixels[i].green()]++;
+      blue[pixels[i].blue()]++;
     }
+    std::array<std::vector<int>, 3> channels = {std::vector<int>(blue, blue+256),
+                                                std::vector<int>(green, green+256),
+                                                std::vector<int>(red, red+256),};
+    histogram histo(channels);
     return histo;
   }
 

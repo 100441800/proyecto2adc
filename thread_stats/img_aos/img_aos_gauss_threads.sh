@@ -1,74 +1,60 @@
 #!/bin/bash
 export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64
-echo "\n########## Program: img-aos in out gauss ##########"
+echo ""
+echo "########## Program: img-aos in out gauss ##########"
+echo ""
 export OMP_SCHEDULE="static"
-echo "\n##### Schedule: ${OMP_SCHEDULE} #####"
-echo "\n1 thread"
+echo "##### Schedule: ${OMP_SCHEDULE} #####"
+echo "1 thread"
 export OMP_NUM_THREADS=1
 ./release/img-aos in out gauss
-echo "\n2 threads"
+echo "2 threads"
 export OMP_NUM_THREADS=2
 ./release/img-aos in out gauss
-echo "\n4 threads"
+echo "4 threads"
 export OMP_NUM_THREADS=4
 ./release/img-aos in out gauss
-echo "\n8 threads"
+echo "8 threads"
 export OMP_NUM_THREADS=8
 ./release/img-aos in out gauss
-echo "\n16 threads"
+echo "16 threads"
 export OMP_NUM_THREADS=16
 ./release/img-aos in out gauss
 
 export OMP_SCHEDULE="dynamic"
-echo "\n##### Schedule: ${OMP_SCHEDULE} #####"
-echo "\n1 thread"
+echo "##### Schedule: ${OMP_SCHEDULE} #####"
+echo ""
+echo "1 thread"
 export OMP_NUM_THREADS=1
 ./release/img-aos in out gauss
-echo "\n2 threads"
+echo "2 threads"
 export OMP_NUM_THREADS=2
 ./release/img-aos in out gauss
-echo "\n4 threads"
+echo "4 threads"
 export OMP_NUM_THREADS=4
 ./release/img-aos in out gauss
-echo "\n8 threads"
+echo "8 threads"
 export OMP_NUM_THREADS=8
 ./release/img-aos in out gauss
-echo "\n16 threads"
+echo "16 threads"
 export OMP_NUM_THREADS=16
 ./release/img-aos in out gauss
 
 export OMP_SCHEDULE="guided"
-echo "\n##### Schedule: ${OMP_SCHEDULE} #####"
-echo "\n1 thread"
+echo "##### Schedule: ${OMP_SCHEDULE} #####"
+echo ""
+echo "1 thread"
 export OMP_NUM_THREADS=1
 ./release/img-aos in out gauss
-echo "\n2 threads"
+echo "2 threads"
 export OMP_NUM_THREADS=2
 ./release/img-aos in out gauss
-echo "\n4 threads"
+echo "4 threads"
 export OMP_NUM_THREADS=4
 ./release/img-aos in out gauss
-echo "\n8 threads"
+echo "8 threads"
 export OMP_NUM_THREADS=8
 ./release/img-aos in out gauss
-echo "\n16 threads"
-export OMP_NUM_THREADS=16
-./release/img-aos in out gauss
-
-export OMP_SCHEDULE="auto"
-echo "\n##### Schedule: ${OMP_SCHEDULE} #####"
-echo "\n1 thread"
-export OMP_NUM_THREADS=1
-./release/img-aos in out gauss
-echo "\n2 threads"
-export OMP_NUM_THREADS=2
-./release/img-aos in out gauss
-echo "\n4 threads"
-export OMP_NUM_THREADS=4
-./release/img-aos in out gauss
-echo "\n8 threads"
-export OMP_NUM_THREADS=8
-./release/img-aos in out gauss
-echo "\n16 threads"
+echo "16 threads"
 export OMP_NUM_THREADS=16
 ./release/img-aos in out gauss
