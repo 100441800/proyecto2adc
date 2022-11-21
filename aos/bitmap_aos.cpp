@@ -75,7 +75,7 @@ namespace images::aos {
         pixels_mono_private.push_back(pixels[i].to_gray_corrected());
       }
       #pragma omp for ordered
-      for(int i=0; i<omp_get_num_threads(); i++) {
+      for(int i = 0; i < omp_get_num_threads(); ++i) {
         #pragma omp ordered
         pixels_mono.insert(pixels_mono.end(), pixels_mono_private.begin(), pixels_mono_private.end());
       }
@@ -110,7 +110,7 @@ namespace images::aos {
     color_accumulator null_accum({0,0,0});
     int row = 0;
     int column = 0;
-    #pragma omp parallel for firstprivate(null_accum, accum, row, column, gauss_kernel) proc_bind(spread)
+    #pragma omp parallel for firstprivate(null_accum, accum, row, column, gauss_kernel)
     for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
       for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
         // Reset accum, row and column at the start of the loop
