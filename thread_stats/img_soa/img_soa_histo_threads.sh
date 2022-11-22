@@ -1,4 +1,5 @@
 #!/bin/bash
+#SBATCH -o ./img_soa_histo_threads.txt
 export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64
 echo ""
 echo "########## Program: img-soa in out histo ##########"
