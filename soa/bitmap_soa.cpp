@@ -2,6 +2,8 @@
 #include "common/file_error.hpp"
 #include <fstream>
 
+#include <omp.h>
+
 namespace images::soa {
 
   bitmap_soa::bitmap_soa(int w, int h) : header{w, h},
@@ -64,13 +66,43 @@ namespace images::soa {
 
   void bitmap_soa::to_gray() noexcept {
     const auto max = header.image_size();
-    for (long i = 0; i < max; ++i) {
-      const auto gray_level = to_gray_corrected(pixels[red_channel][i], pixels[green_channel][i],
-          pixels[blue_channel][i]);
-      pixels[red_channel][i] = gray_level;
-      pixels[green_channel][i] = gray_level;
-      pixels[blue_channel][i] = gray_level;
+
+    std::vector<uint8_t> pixels_mono_red;
+    pixels_mono_red.reserve(max);
+    std::vector<uint8_t> pixels_mono_green;
+    pixels_mono_red.reserve(max);
+    std::vector<uint8_t> pixels_mono_blue;
+    pixels_mono_red.reserve(max);
+
+    #pragma omp parallel 
+    {
+      std::vector<uint8_t> pixels_mono_red_private;
+      std::vector<uint8_t> pixels_mono_green_private;
+      std::vector<uint8_t> pixels_mono_blue_private;
+      #pragma omp for nowait
+      for (int i = 0; i < max; ++i) {
+        const auto gray_level = to_gray_corrected(pixels[red_channel][i], pixels[green_channel][i],
+        pixels[blue_channel][i]);
+        pixels_mono_red_private.push_back(gray_level);
+        pixels_mono_green_private.push_back(gray_level);
+        pixels_mono_blue_private.push_back(gray_level);
+      }
+
+      #pragma omp for ordered
+      for(int i = 0; i < omp_get_num_threads(); ++i) {
+        #pragma omp ordered
+        {
+          pixels_mono_red.insert(pixels_mono_red.end(), pixels_mono_red_private.begin(), pixels_mono_red_private.end());
+          pixels_mono_green.insert(pixels_mono_green.end(), pixels_mono_green_private.begin(), pixels_mono_green_private.end());
+          pixels_mono_blue.insert(pixels_mono_blue.end(), pixels_mono_blue_private.begin(), pixels_mono_blue_private.end());
+        }
+      }
     }
+
+    pixels[red_channel] = pixels_mono_red;
+    pixels[green_channel] = pixels_mono_green;
+    pixels[blue_channel] = pixels_mono_blue;
+  
   }
 
   bool bitmap_soa::is_gray() const noexcept {
@@ -95,20 +127,28 @@ namespace images::soa {
     bitmap_soa result{*this};
     const auto num_pixels = std::ssize(pixels[red_channel]);
     const auto [pixels_width, pixels_height] = get_size();
+    color_accumulator accum;
+    color_accumulator null_accum({0,0,0});
+    int row = 0;
+    int column = 0;
+    #pragma omp parallel for firstprivate(null_accum, accum, row, column, gauss_kernel)
     for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
-      const auto [row, column] = get_pixel_position(pixel_index);
-      color_accumulator accum;
       for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
+        (gauss_index == 0) ? (accum = null_accum, 
+                              row = pixel_index / pixels_width,
+                              column = pixel_index % pixels_width): (row); 
+
         const int column_offset = (gauss_index % 5) - 2;
         const int j = column + column_offset;
-        if (j < 0 || j >= pixels_width) { continue; }
+        bool stay_in_loop = true;
+        stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
         const int row_offset = (gauss_index / 5) - 2;
         const int i = row + row_offset;
-        if (i < 0 || i >= pixels_height) { continue; }
+        stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
         // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
         const int gauss_value = gauss_kernel[gauss_index];
-        const auto gauss_pixel_index = index(i, j);
-        accum += get_pixel(gauss_pixel_index) * gauss_value;
+        const auto gauss_pixel_index = i * pixels_width + j;
+        accum += (stay_in_loop) ? get_pixel(gauss_pixel_index) * gauss_value : null_accum;
       }
       result.set_pixel(pixel_index, pixel{accum / gauss_norm});
     }
@@ -116,13 +156,20 @@ namespace images::soa {
   }
 
   histogram bitmap_soa::generate_histogram() const noexcept {
-    histogram histo;
     const int pixel_count = width() * height();
+    int red[256] = {0};
+    int green[256] = {0};
+    int blue[256] = {0};
+    #pragma omp parallel for reduction(+:red[:256], green[:256], blue[:256])
     for (int i = 0; i < pixel_count; ++i) {
-      histo.add_red(pixels[red_channel][i]);
-      histo.add_green(pixels[green_channel][i]);
-      histo.add_blue(pixels[blue_channel][i]);
+      red[pixels[red_channel][i]]++;
+      green[pixels[green_channel][i]]++;
+      blue[pixels[blue_channel][i]]++;
     }
+    std::array<std::vector<int>, 3> channels = {std::vector<int>(blue, blue+256),
+                                                std::vector<int>(green, green+256),
+                                                std::vector<int>(red, red+256),};
+    histogram histo(channels);
     return histo;
   }
 

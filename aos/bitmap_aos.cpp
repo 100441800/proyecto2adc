@@ -69,7 +69,7 @@ namespace images::aos {
     pixels_mono.reserve(max);
     #pragma omp parallel 
     {
-      std::vector<pixel> pixels_mono_private;
+      std::vector<pixel> pixels_mono_private; // Vector created by each thread
       #pragma omp for nowait
       for (int i = 0; i < max; ++i) {
         pixels_mono_private.push_back(pixels[i].to_gray_corrected());
@@ -129,11 +129,12 @@ namespace images::aos {
         const int gauss_value = gauss_kernel[gauss_index];
         const auto gauss_pixel_index = i * pixels_width + j;
         accum += (stay_in_loop) ? pixels[gauss_pixel_index] * gauss_value : null_accum;
-        result.pixels[pixel_index] = (gauss_index+1==gauss_size) ? accum / gauss_norm : null_accum;
       }
+      result.pixels[pixel_index] = accum / gauss_norm;    
     }
     *this = result;
   }
+
   /* One dimension version with time 6*O(n)
     bitmap_aos result{*this};
     const auto num_pixels = std::ssize(pixels);
