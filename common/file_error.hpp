@@ -5,24 +5,24 @@
 
 namespace images::common {
 
-  enum class file_error_kind {
-    cannot_open,
-    cannot_read,
-    cannot_read_extra,
-    cannot_write,
-    invalid_magic_number,
-    invalid_planes,
-    invlaid_bit_count,
-    invalid_compression,
-    invalid_pixel_start
-  };
+enum class file_error_kind {
+  cannot_open,
+  cannot_read,
+  cannot_read_extra,
+  cannot_write,
+  invalid_magic_number,
+  invalid_planes,
+  invlaid_bit_count,
+  invalid_compression,
+  invalid_pixel_start
+};
 
-  std::string to_string(file_error_kind error);
+std::string to_string(file_error_kind error);
 
-  struct file_error {
-    file_error_kind kind;
-  };
+struct file_error {
+  file_error_kind kind;
+};
 
-}
+} // namespace images::common
 
-#endif //IMAGES_COMMON_FILE_ERROR_HPP
+#endif // IMAGES_COMMON_FILE_ERROR_HPP

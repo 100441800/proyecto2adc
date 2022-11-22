@@ -1,59 +1,58 @@
 #ifndef IMAGES_AOS_BITMAP_AOS_HPP
 #define IMAGES_AOS_BITMAP_AOS_HPP
 
+#include "common/bitmap_header.hpp"
+#include "common/histogram.hpp"
+#include "common/pixel.hpp"
 #include <filesystem>
 #include <vector>
-#include "common/bitmap_header.hpp"
-#include "common/pixel.hpp"
-#include "common/histogram.hpp"
 //#include <vector>
 
 namespace images::aos {
 
-  using namespace images::common;
+using namespace images::common;
 
-  class bitmap_aos {
-  public:
-    explicit bitmap_aos() noexcept = default;
-    bitmap_aos(int w, int h);
+class bitmap_aos {
+public:
+  explicit bitmap_aos() noexcept = default;
+  bitmap_aos(int w, int h);
 
-    bool operator==(const bitmap_aos &) const noexcept = default;
+  bool operator==(const bitmap_aos &) const noexcept = default;
 
-    void read(const std::filesystem::path & in_name);
-    void write(const std::filesystem::path & out_name);
+  void read(const std::filesystem::path &in_name);
+  void write(const std::filesystem::path &out_name);
 
-    void to_gray() noexcept;
-    void gauss() noexcept;
-    //void gauss_rows(std::vector<color_accumulator> & image_accum) noexcept;
-    //void gauss_columns(std::vector<color_accumulator> & image_accum_row, std::vector<color_accumulator> & image_accum_column) noexcept;
-    [[nodiscard]] histogram generate_histogram() const noexcept;
-    void print_info(std::ostream & os) const noexcept;
+  void to_gray() noexcept;
+  void gauss() noexcept;
+  // void gauss_rows(std::vector<color_accumulator> & image_accum) noexcept;
+  // void gauss_columns(std::vector<color_accumulator> & image_accum_row,
+  // std::vector<color_accumulator> & image_accum_column) noexcept;
+  [[nodiscard]] histogram generate_histogram() const noexcept;
+  void print_info(std::ostream &os) const noexcept;
 
-    [[nodiscard]] int width() const noexcept { return header.width(); }
+  [[nodiscard]] int width() const noexcept { return header.width(); }
 
-    [[nodiscard]] int height() const noexcept { return header.height(); }
+  [[nodiscard]] int height() const noexcept { return header.height(); }
 
-    [[nodiscard]] auto get_size() const {
-      return std::tuple{width(), height()};
-    }
+  [[nodiscard]] auto get_size() const { return std::tuple{width(), height()}; }
 
-    [[nodiscard]] auto get_pixel_position(int index) const {
-      return std::tuple{index / width(), index % width()};
-    }
+  [[nodiscard]] auto get_pixel_position(int index) const {
+    return std::tuple{index / width(), index % width()};
+  }
 
-    [[nodiscard]] bool is_gray() const noexcept;
+  [[nodiscard]] bool is_gray() const noexcept;
 
-    [[nodiscard]] pixel get_pixel(int r, int c) const noexcept;
-    void set_pixel(int r, int c, common::pixel p) noexcept;
+  [[nodiscard]] pixel get_pixel(int r, int c) const noexcept;
+  void set_pixel(int r, int c, common::pixel p) noexcept;
 
-    friend void print_diff(const bitmap_aos & bm1, const bitmap_aos & bm2) noexcept;
+  friend void print_diff(const bitmap_aos &bm1, const bitmap_aos &bm2) noexcept;
 
-  private:
-    [[nodiscard]] int index(int r, int c) const noexcept;
+private:
+  [[nodiscard]] int index(int r, int c) const noexcept;
 
-    bitmap_header header{};
-    std::vector<pixel> pixels;
-  };
+  bitmap_header header{};
+  std::vector<pixel> pixels;
+};
 
 } // namespace images::aos
 

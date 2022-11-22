@@ -80,5 +80,7 @@
         "iterator": "cpp",
         "utility": "cpp",
         "filesystem": "cpp"
-    }
+    },
+    "clang-format.executable": "/opt/homebrew/bin/clang-format",
+    "editor.formatOnSave": true
 }
