@@ -107,7 +107,6 @@ constexpr auto gauss_size = std::ssize(gauss_kernel);
 } // namespace
 
 void bitmap_aos::gauss() noexcept {
-  bitmap_aos result{*this};
   const auto num_pixels = std::ssize(pixels);
   const auto [pixels_width, pixels_height] = get_size();
   color_accumulator accum;
@@ -146,17 +145,16 @@ void bitmap_aos::gauss() noexcept {
     }
     #pragma omp master
     {
-      result.pixels.clear();
-      result.pixels.reserve(num_pixels);
+      pixels.clear();
+      pixels.reserve(num_pixels);
     }
     #pragma omp for ordered
     for (int i = 0; i < omp_get_num_threads(); ++i) {
       #pragma omp ordered
-      result.pixels.insert(result.pixels.end(), gauss_private.begin(),
+      pixels.insert(pixels.end(), gauss_private.begin(),
                            gauss_private.end());
     }
   }
-  *this = result;
 }
 
 /* One dimension version with time 6*O(n)

@@ -65,13 +65,6 @@ void bitmap_soa::write(const std::filesystem::path &out_name) {
 void bitmap_soa::to_gray() noexcept {
   const auto max = header.image_size();
 
-  std::vector<uint8_t> pixels_mono_red;
-  pixels_mono_red.reserve(max);
-  std::vector<uint8_t> pixels_mono_green;
-  pixels_mono_red.reserve(max);
-  std::vector<uint8_t> pixels_mono_blue;
-  pixels_mono_red.reserve(max);
-
   #pragma omp parallel
   {
     std::vector<uint8_t> pixels_mono_red_private;
@@ -87,26 +80,32 @@ void bitmap_soa::to_gray() noexcept {
       pixels_mono_blue_private.push_back(gray_level);
     }
 
+    #pragma omp master
+    {
+      pixels[red_channel].clear();
+      pixels[red_channel].reserve(max);
+      pixels[green_channel].clear();
+      pixels[green_channel].reserve(max);
+      pixels[blue_channel].clear();
+      pixels[blue_channel].reserve(max);
+    }
+
     #pragma omp for ordered
     for (int i = 0; i < omp_get_num_threads(); ++i) {
       #pragma omp ordered
       {
-        pixels_mono_red.insert(pixels_mono_red.end(),
+        pixels[red_channel].insert(pixels[red_channel].end(),
                                pixels_mono_red_private.begin(),
                                pixels_mono_red_private.end());
-        pixels_mono_green.insert(pixels_mono_green.end(),
+        pixels[green_channel].insert(pixels[green_channel].end(),
                                  pixels_mono_green_private.begin(),
                                  pixels_mono_green_private.end());
-        pixels_mono_blue.insert(pixels_mono_blue.end(),
+        pixels[blue_channel].insert(pixels[blue_channel].end(),
                                 pixels_mono_blue_private.begin(),
                                 pixels_mono_blue_private.end());
       }
     }
   }
-
-  pixels[red_channel] = pixels_mono_red;
-  pixels[green_channel] = pixels_mono_green;
-  pixels[blue_channel] = pixels_mono_blue;
 }
 
 bool bitmap_soa::is_gray() const noexcept {
@@ -136,31 +135,63 @@ void bitmap_soa::gauss() noexcept {
   color_accumulator null_accum({0, 0, 0});
   int row = 0;
   int column = 0;
-  #pragma omp parallel for firstprivate(null_accum, accum, row, column,          \
-                                      gauss_kernel)
-  for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
-    for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
-      (gauss_index == 0)
-          ? (accum = null_accum, row = pixel_index / pixels_width,
-             column = pixel_index % pixels_width)
-          : (row);
+  #pragma omp parallel 
+  {
+    std::vector<uint8_t> pixels_red_private;
+    std::vector<uint8_t> pixels_green_private;
+    std::vector<uint8_t> pixels_blue_private;
 
-      const int column_offset = (gauss_index % 5) - 2;
-      const int j = column + column_offset;
-      bool stay_in_loop = true;
-      stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
-      const int row_offset = (gauss_index / 5) - 2;
-      const int i = row + row_offset;
-      stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-      const int gauss_value = gauss_kernel[gauss_index];
-      const auto gauss_pixel_index = i * pixels_width + j;
-      accum += (stay_in_loop) ? get_pixel(gauss_pixel_index) * gauss_value
-                              : null_accum;
+    #pragma omp for firstprivate(null_accum, accum, row, column,          \
+                                 gauss_kernel)
+    for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
+      for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
+        (gauss_index == 0)
+            ? (accum = null_accum, row = pixel_index / pixels_width,
+              column = pixel_index % pixels_width)
+            : (row);
+
+        const int column_offset = (gauss_index % 5) - 2;
+        const int j = column + column_offset;
+        bool stay_in_loop = true;
+        stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
+        const int row_offset = (gauss_index / 5) - 2;
+        const int i = row + row_offset;
+        stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        const int gauss_value = gauss_kernel[gauss_index];
+        const auto gauss_pixel_index = i * pixels_width + j;
+        accum += (stay_in_loop) ? get_pixel(gauss_pixel_index) * gauss_value
+                                : null_accum;
+      }
+      pixel point = pixel{accum / gauss_norm};
+      pixels_red_private.push_back(point.red());
+      pixels_green_private.push_back(point.green());
+      pixels_blue_private.push_back(point.blue());
     }
-    result.set_pixel(pixel_index, pixel{accum / gauss_norm});
+
+    #pragma omp master
+    {
+      pixels[red_channel].clear();
+      pixels[red_channel].reserve(num_pixels);
+      pixels[green_channel].clear();
+      pixels[green_channel].reserve(num_pixels);
+      pixels[blue_channel].clear();
+      pixels[blue_channel].reserve(num_pixels);
+    }
+
+    #pragma omp for ordered
+    for (int i = 0; i < omp_get_num_threads(); ++i) {
+      #pragma omp ordered
+      {
+        pixels[red_channel].insert(pixels[red_channel].end(), pixels_red_private.begin(),
+                                   pixels_red_private.end());
+        pixels[green_channel].insert(pixels[green_channel].end(), pixels_green_private.begin(),
+                                     pixels_green_private.end());
+        pixels[blue_channel].insert(pixels[blue_channel].end(), pixels_blue_private.begin(),
+                                    pixels_blue_private.end());
+      }
+    }
   }
-  *this = result;
 }
 
 histogram bitmap_soa::generate_histogram() const noexcept {

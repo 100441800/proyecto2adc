@@ -12,6 +12,9 @@ mkdir -p ./test/out
 
 cp ./test/images/* ./test/in/
 
+export OMP_NUM_THREADS=1024;
+export OMP_SCHEDULE="dynamic"
+
 # AOS
 echo -e "\nGoing to test ${BOLD}img-aos${NC}:"
 rm -rf ./test/out/*
