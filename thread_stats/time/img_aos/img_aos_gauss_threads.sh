@@ -8,54 +8,54 @@ export OMP_SCHEDULE="static"
 echo "##### Schedule: ${OMP_SCHEDULE} #####"
 echo "1 thread"
 export OMP_NUM_THREADS=1
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "2 threads"
 export OMP_NUM_THREADS=2
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "4 threads"
 export OMP_NUM_THREADS=4
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "8 threads"
 export OMP_NUM_THREADS=8
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "16 threads"
 export OMP_NUM_THREADS=16
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 
 export OMP_SCHEDULE="dynamic"
 echo "##### Schedule: ${OMP_SCHEDULE} #####"
 echo ""
 echo "1 thread"
 export OMP_NUM_THREADS=1
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "2 threads"
 export OMP_NUM_THREADS=2
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "4 threads"
 export OMP_NUM_THREADS=4
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "8 threads"
 export OMP_NUM_THREADS=8
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "16 threads"
 export OMP_NUM_THREADS=16
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 
 export OMP_SCHEDULE="guided"
 echo "##### Schedule: ${OMP_SCHEDULE} #####"
 echo ""
 echo "1 thread"
 export OMP_NUM_THREADS=1
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "2 threads"
 export OMP_NUM_THREADS=2
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "4 threads"
 export OMP_NUM_THREADS=4
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "8 threads"
 export OMP_NUM_THREADS=8
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss
 echo "16 threads"
 export OMP_NUM_THREADS=16
-./release/img-aos in out gauss
+~/proyecto2PARALELO/release/img-soa in out gauss

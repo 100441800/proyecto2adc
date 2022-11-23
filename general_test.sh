@@ -1,6 +1,13 @@
 #!/bin/bash
-#SBATCH -o ./test.out
-#SBATCH -e ./test.out
+#SBATCH -o ./out-general_test.txt
+#SBATCH -e ./out-general_test.txt
+
+if [ $# -eq 1 ] && [ $1 == avignon ]; then
+    export LD_LIBRARY_PATH=/opt/gcc-12.1.0/lib64
+fi
+
+export OMP_NUM_THREADS=1024;
+export OMP_SCHEDULE="dynamic"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
