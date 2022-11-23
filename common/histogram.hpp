@@ -12,6 +12,7 @@ namespace images::common {
 class histogram {
 public:
   histogram() noexcept = default;
+
   histogram(std::array<std::vector<int>, 3> in) { this->channels = in; }
 
   void add_color(pixel p) noexcept;

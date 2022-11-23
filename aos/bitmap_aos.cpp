@@ -64,8 +64,6 @@ void bitmap_aos::write(const std::filesystem::path &out_name) {
 
 void bitmap_aos::to_gray() noexcept {
   const auto max = std::ssize(pixels);
-  std::vector<pixel> pixels_mono;
-  pixels_mono.reserve(max);
   #pragma omp parallel
   {
     std::vector<pixel> pixels_mono_private; // Vector created by each thread
@@ -73,14 +71,18 @@ void bitmap_aos::to_gray() noexcept {
     for (int i = 0; i < max; ++i) {
       pixels_mono_private.push_back(pixels[i].to_gray_corrected());
     }
+    #pragma omp master
+    {
+      pixels.clear();
+      pixels.reserve(max);
+    }
     #pragma omp for ordered
     for (int i = 0; i < omp_get_num_threads(); ++i) {
       #pragma omp ordered
-      pixels_mono.insert(pixels_mono.end(), pixels_mono_private.begin(),
+      pixels.insert(pixels.end(), pixels_mono_private.begin(),
                          pixels_mono_private.end());
     }
   }
-  pixels = pixels_mono;
 }
 
 bool bitmap_aos::is_gray() const noexcept {
@@ -112,30 +114,47 @@ void bitmap_aos::gauss() noexcept {
   color_accumulator null_accum({0, 0, 0});
   int row = 0;
   int column = 0;
-  #pragma omp parallel for firstprivate(null_accum, accum, row, column,          \
-                                      gauss_kernel)
-  for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
-    for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
-      // Reset accum, row and column at the start of the loop
-      (gauss_index == 0)
-          ? (accum = null_accum, row = pixel_index / pixels_width,
-             column = pixel_index % pixels_width)
-          : (row);
+  #pragma omp parallel 
+  {
+    std::vector<pixel> gauss_private; // Vector private to each thread
 
-      const int column_offset = (gauss_index % 5) - 2;
-      const int j = column + column_offset;
-      bool stay_in_loop = true;
-      stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
-      const int row_offset = (gauss_index / 5) - 2;
-      const int i = row + row_offset;
-      stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
-      // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-      const int gauss_value = gauss_kernel[gauss_index];
-      const auto gauss_pixel_index = i * pixels_width + j;
-      accum +=
-          (stay_in_loop) ? pixels[gauss_pixel_index] * gauss_value : null_accum;
+    #pragma omp for firstprivate(null_accum, accum, row, column,          \
+                                      gauss_kernel)
+    for (int pixel_index = 0; pixel_index < num_pixels; ++pixel_index) {
+      for (int gauss_index = 0; gauss_index < gauss_size; ++gauss_index) {
+        // Reset accum, row and column at the start of the loop
+        (gauss_index == 0)
+            ? (accum = null_accum, 
+              row = pixel_index / pixels_width,
+              column = pixel_index % pixels_width)
+            : (row);
+
+        const int column_offset = (gauss_index % 5) - 2;
+        const int j = column + column_offset;
+        bool stay_in_loop = true;
+        stay_in_loop = (j < 0 || j >= pixels_width) ? false : stay_in_loop;
+        const int row_offset = (gauss_index / 5) - 2;
+        const int i = row + row_offset;
+        stay_in_loop = (i < 0 || i >= pixels_height) ? false : stay_in_loop;
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
+        const int gauss_value = gauss_kernel[gauss_index];
+        const auto gauss_pixel_index = i * pixels_width + j;
+        accum +=
+            (stay_in_loop) ? pixels[gauss_pixel_index] * gauss_value : null_accum;
+      }
+      gauss_private.push_back(accum / gauss_norm);
     }
-    result.pixels[pixel_index] = accum / gauss_norm;
+    #pragma omp master
+    {
+      result.pixels.clear();
+      result.pixels.reserve(num_pixels);
+    }
+    #pragma omp for ordered
+    for (int i = 0; i < omp_get_num_threads(); ++i) {
+      #pragma omp ordered
+      result.pixels.insert(result.pixels.end(), gauss_private.begin(),
+                           gauss_private.end());
+    }
   }
   *this = result;
 }
